@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 6, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"","debugId":null}},
-    {"offset": {"line": 124, "column": 0}, "map": {"version":3,"sources":["file:///Users/disco_lu/link-share-pwa/app/auth/callback/route.ts"],"sourcesContent":["import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'\nimport { cookies } from 'next/headers'\nimport { NextResponse } from 'next/server'\n\nexport async function GET(request: Request) {\n  const requestUrl = new URL(request.url)\n  const code = requestUrl.searchParams.get('code')\n\n  if (code) {\n    const supabase = createRouteHandlerClient({ cookies })\n    await supabase.auth.exchangeCodeForSession(code)\n  }\n\n  // URL to redirect to after sign in process completes\n  return NextResponse.redirect(new URL('/', requestUrl.origin))\n} "],"names":[],"mappings":";;;AAAA;AACA;AACA;;;;AAEO,eAAe,IAAI,OAAgB;IACxC,MAAM,aAAa,IAAI,IAAI,QAAQ,GAAG;IACtC,MAAM,OAAO,WAAW,YAAY,CAAC,GAAG,CAAC;IAEzC,IAAI,MAAM;QACR,MAAM,WAAW,CAAA,GAAA,0KAAA,CAAA,2BAAwB,AAAD,EAAE;YAAE,SAAA,iIAAA,CAAA,UAAO;QAAC;QACpD,MAAM,SAAS,IAAI,CAAC,sBAAsB,CAAC;IAC7C;IAEA,qDAAqD;IACrD,OAAO,gIAAA,CAAA,eAAY,CAAC,QAAQ,CAAC,IAAI,IAAI,KAAK,WAAW,MAAM;AAC7D","debugId":null}}]
-}

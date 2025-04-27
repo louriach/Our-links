@@ -492,9 +492,15 @@ export default function Dashboard({ user }: DashboardProps) {
                         <p className="mt-1 text-[#666] font-['Helvetica Neue'] text-sm">Note: {link.note}</p>
                       )}
                       <div className="mt-2 flex items-center space-x-2">
-                        <div className="w-6 h-6 rounded-full bg-[#007AFF] flex items-center justify-center">
-                          <span className="text-white text-xs font-medium">{link.created_by[0].toUpperCase()}</span>
-                        </div>
+                        {link.created_by === user.id ? (
+                          <div className="w-6 h-6 rounded-full bg-[#007AFF] flex items-center justify-center">
+                            <span className="text-white text-xs font-medium">{user.email[0].toUpperCase()}</span>
+                          </div>
+                        ) : (
+                          <div className="w-6 h-6 rounded-full bg-[#999] flex items-center justify-center">
+                            <span className="text-white text-xs font-medium">{link.created_by[0].toUpperCase()}</span>
+                          </div>
+                        )}
                         <p className="text-xs text-[#999] font-['Helvetica Neue']">
                           Shared on {new Date(link.created_at).toLocaleDateString()}
                         </p>

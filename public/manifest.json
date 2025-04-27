@@ -1,17 +1,16 @@
 {
-  "name": "LinkShare",
-  "short_name": "LinkShare",
-  "description": "Share and recommend links with friends",
+  "name": "Our Links",
+  "short_name": "Our Links",
+  "description": "Share and organize links with friends",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "theme_color": "#0070f3",
   "icons": [
     {
       "src": "/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
       "src": "/icon-512x512.png",

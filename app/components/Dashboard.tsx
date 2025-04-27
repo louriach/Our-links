@@ -1,0 +1,512 @@
+'use client'
+
+import { User } from '@supabase/supabase-js'
+import { useState, useEffect } from 'react'
+import { useAuth } from '../context/auth'
+import { supabase } from '../lib/supabase'
+import toast from 'react-hot-toast'
+import { CheckIcon, ShareIcon, PlusIcon, UserCircleIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline'
+import { Popover, Menu } from '@headlessui/react'
+import { useRouter } from 'next/navigation'
+
+interface DashboardProps {
+  user: User
+}
+
+interface Link {
+  id: string
+  url: string
+  title: string
+  description: string
+  note: string
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+interface Friend {
+  id: string
+  email: string
+  full_name: string | null
+  avatar_url: string | null
+}
+
+interface Profile {
+  id: string
+  profile_url: string
+}
+
+interface FriendResponse {
+  friend: Friend
+}
+
+export default function Dashboard({ user }: DashboardProps) {
+  const router = useRouter()
+  const [url, setUrl] = useState('')
+  const [note, setNote] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [links, setLinks] = useState<Link[]>([])
+  const [friends, setFriends] = useState<Friend[]>([])
+  const [selectedFriends, setSelectedFriends] = useState<string[]>([])
+  const [showFriendSelector, setShowFriendSelector] = useState(false)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const { signOut } = useAuth()
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchLinks()
+    fetchFriends()
+    fetchProfile()
+  }, [])
+
+  const fetchLinks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('links')
+        .select('*')
+        .eq('created_by', user.id)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      setLinks(data || [])
+    } catch (error) {
+      console.error('Error fetching links:', error)
+      toast.error('Failed to load links')
+    }
+  }
+
+  const fetchFriends = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('friendships')
+        .select(`
+          friend:profiles!friendships_friend_id_fkey (
+            id,
+            email,
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('status', 'accepted')
+
+      if (error) throw error
+
+      const friendsData = (data as unknown as FriendResponse[]) || []
+      setFriends(friendsData.map(f => f.friend))
+    } catch (error) {
+      console.error('Error fetching friends:', error)
+      toast.error('Failed to load friends')
+    }
+  }
+
+  const fetchProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, profile_url')
+        .eq('id', user.id)
+        .single()
+
+      if (error) throw error
+
+      setProfile(data)
+    } catch (error) {
+      console.error('Error fetching profile:', error)
+      toast.error('Failed to load profile')
+    }
+  }
+
+  const formatUrl = (url: string) => {
+    // If URL doesn't start with http:// or https://, add https://
+    if (!url.match(/^https?:\/\//i)) {
+      return `https://${url}`
+    }
+    return url
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const formattedUrl = formatUrl(url)
+      
+      // First, try to fetch metadata for the URL
+      const response = await fetch('/api/unfurl', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: formattedUrl }),
+      })
+
+      const metadata = await response.json()
+      
+      if (!response.ok) {
+        // If metadata fetch fails, still create the link with basic info
+        console.warn('Failed to fetch metadata:', metadata.error)
+        const { data, error } = await supabase
+          .from('links')
+          .insert({
+            created_by: user.id,
+            url: formattedUrl,
+            title: new URL(formattedUrl).hostname,
+            description: '',
+            note: note.trim(),
+          })
+          .select()
+          .single()
+
+        if (error) throw error
+
+        // Share with selected friends
+        if (selectedFriends.length > 0) {
+          const { error: shareError } = await supabase
+            .from('link_shares')
+            .insert(
+              selectedFriends.map(friendId => ({
+                link_id: data.id,
+                shared_with: friendId,
+                shared_by: user.id
+              }))
+            )
+
+          if (shareError) throw shareError
+        }
+
+        toast.success('Link shared successfully!')
+        setUrl('')
+        setNote('')
+        setSelectedFriends([])
+        fetchLinks()
+        return
+      }
+
+      // Create the link with metadata
+      const { data, error } = await supabase
+        .from('links')
+        .insert({
+          created_by: user.id,
+          url: formattedUrl,
+          title: metadata.title || new URL(formattedUrl).hostname,
+          description: metadata.description || '',
+          note: note.trim(),
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Share with selected friends
+      if (selectedFriends.length > 0) {
+        const { error: shareError } = await supabase
+          .from('link_shares')
+          .insert(
+            selectedFriends.map(friendId => ({
+              link_id: data.id,
+              shared_with: friendId,
+              shared_by: user.id
+            }))
+          )
+
+        if (shareError) throw shareError
+      }
+
+      toast.success('Link shared successfully!')
+      setUrl('')
+      setNote('')
+      setSelectedFriends([])
+      fetchLinks()
+    } catch (error) {
+      console.error('Error sharing link:', error)
+      toast.error('Failed to share link')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const toggleFriend = (friendId: string) => {
+    setSelectedFriends((prev: string[]) => 
+      prev.includes(friendId)
+        ? prev.filter((id: string) => id !== friendId)
+        : [...prev, friendId]
+    )
+  }
+
+  const copyProfileUrl = async () => {
+    if (!profile?.profile_url) {
+      toast.error('Profile URL not available')
+      return
+    }
+
+    const profileUrl = `${window.location.origin}/p/${profile.profile_url}`
+    try {
+      await navigator.clipboard.writeText(profileUrl)
+      toast.success('Profile URL copied to clipboard!')
+    } catch (err) {
+      toast.error('Failed to copy profile URL')
+    }
+  }
+
+  const filteredFriends = friends.filter(friend => 
+    friend.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    friend.email.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const recentFriends = friends.slice(0, 5)
+
+  const handleProfileClick = () => {
+    router.push('/profile')
+  }
+
+  const handleSettingsClick = () => {
+    router.push('/settings')
+  }
+
+  return (
+    <div className="min-h-screen bg-[#f0f0f0]">
+      {/* Header */}
+      <header className="bg-white border-b border-[#e0e0e0] shadow-sm">
+        <div className="max-w-[640px] mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-[#1a1a1a] font-['Helvetica Neue']">Our Links</h1>
+            
+            <div className="flex items-center space-x-2">
+              <Popover className="relative">
+                <Popover.Button className="p-2 text-[#007AFF] hover:bg-[#f5f5f5] rounded-lg">
+                  <PlusIcon className="w-5 h-5" />
+                </Popover.Button>
+                <Popover.Panel className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-[#e0e0e0] p-4 z-10">
+                  <form onSubmit={handleSubmit} className="space-y-3">
+                    <div>
+                      <input
+                        type="text"
+                        value={url}
+                        onChange={(e) => setUrl(e.target.value)}
+                        placeholder="Enter URL to share"
+                        className="w-full px-4 py-2 rounded-lg border border-[#e0e0e0] focus:outline-none focus:border-[#007AFF] font-['Helvetica Neue'] text-[#1a1a1a] text-sm"
+                      />
+                    </div>
+                    <div>
+                      <textarea
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                        placeholder="Add a note (optional)"
+                        className="w-full px-4 py-2 rounded-lg border border-[#e0e0e0] focus:outline-none focus:border-[#007AFF] font-['Helvetica Neue'] text-[#1a1a1a] text-sm"
+                        rows={2}
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <div className="bg-[#f5f5f5] rounded-lg p-3">
+                        {friends.length === 0 ? (
+                          <div className="text-center space-y-2">
+                            <p className="text-sm text-[#666]">You don't have any friends yet.</p>
+                            <button
+                              type="button"
+                              onClick={copyProfileUrl}
+                              className="text-[#007AFF] text-sm"
+                            >
+                              Share your profile to connect with friends
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <input
+                              type="text"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              placeholder="Search friends..."
+                              className="w-full px-3 py-1.5 rounded-lg border border-[#e0e0e0] bg-white text-sm"
+                            />
+                            <div className="space-y-2 max-h-48 overflow-y-auto">
+                              {searchQuery ? (
+                                filteredFriends.map(friend => (
+                                  <div
+                                    key={friend.id}
+                                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-white cursor-pointer"
+                                    onClick={() => toggleFriend(friend.id)}
+                                  >
+                                    <div className="w-6 h-6 rounded-full bg-[#007AFF] flex items-center justify-center">
+                                      {friend.avatar_url ? (
+                                        <img src={friend.avatar_url} alt={friend.full_name || friend.email} className="w-full h-full rounded-full" />
+                                      ) : (
+                                        <span className="text-white text-xs font-medium">{friend.email[0].toUpperCase()}</span>
+                                      )}
+                                    </div>
+                                    <span className="text-sm">{friend.full_name || friend.email}</span>
+                                    {selectedFriends.includes(friend.id) && (
+                                      <CheckIcon className="w-4 h-4 text-[#007AFF]" />
+                                    )}
+                                  </div>
+                                ))
+                              ) : (
+                                recentFriends.map(friend => (
+                                  <div
+                                    key={friend.id}
+                                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-white cursor-pointer"
+                                    onClick={() => toggleFriend(friend.id)}
+                                  >
+                                    <div className="w-6 h-6 rounded-full bg-[#007AFF] flex items-center justify-center">
+                                      {friend.avatar_url ? (
+                                        <img src={friend.avatar_url} alt={friend.full_name || friend.email} className="w-full h-full rounded-full" />
+                                      ) : (
+                                        <span className="text-white text-xs font-medium">{friend.email[0].toUpperCase()}</span>
+                                      )}
+                                    </div>
+                                    <span className="text-sm">{friend.full_name || friend.email}</span>
+                                    {selectedFriends.includes(friend.id) && (
+                                      <CheckIcon className="w-4 h-4 text-[#007AFF]" />
+                                    )}
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      {error && (
+                        <div className="flex items-center space-x-2 p-2 bg-red-50 rounded-lg">
+                          <ExclamationCircleIcon className="w-4 h-4 text-red-500" />
+                          <span className="text-sm text-red-700">{error}</span>
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full px-4 py-1.5 bg-[#007AFF] text-white rounded-lg hover:bg-[#0055FF] disabled:opacity-50 font-['Helvetica Neue'] text-sm"
+                    >
+                      {loading ? 'Sharing...' : 'Share Link'}
+                    </button>
+                  </form>
+                </Popover.Panel>
+              </Popover>
+
+              <Popover className="relative">
+                <Popover.Button className="p-2 text-[#007AFF] hover:bg-[#f5f5f5] rounded-lg">
+                  <ShareIcon className="w-5 h-5" />
+                </Popover.Button>
+                <Popover.Panel className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-[#e0e0e0] p-4 z-10">
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-medium text-[#1a1a1a]">Share your profile</h3>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={`${window.location.origin}/p/${profile?.profile_url}`}
+                        readOnly
+                        className="flex-1 px-3 py-1.5 rounded-lg border border-[#e0e0e0] bg-[#f5f5f5] text-[#666] font-['Helvetica Neue'] text-sm"
+                      />
+                      <button
+                        onClick={copyProfileUrl}
+                        className="px-3 py-1.5 bg-[#007AFF] text-white rounded-lg hover:bg-[#0055FF] font-['Helvetica Neue'] text-sm"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                </Popover.Panel>
+              </Popover>
+
+              <Menu as="div" className="relative">
+                <Menu.Button className="w-8 h-8 rounded-full bg-[#007AFF] flex items-center justify-center">
+                  <span className="text-white font-medium">{user?.email?.[0]?.toUpperCase() || '?'}</span>
+                </Menu.Button>
+                <Menu.Items className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-[#e0e0e0] py-1 z-10">
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={handleProfileClick}
+                        className={`${
+                          active ? 'bg-[#f5f5f5]' : ''
+                        } flex items-center space-x-2 w-full px-4 py-2 text-sm text-[#1a1a1a]`}
+                      >
+                        <UserCircleIcon className="w-4 h-4" />
+                        <span>Profile</span>
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={handleSettingsClick}
+                        className={`${
+                          active ? 'bg-[#f5f5f5]' : ''
+                        } flex items-center space-x-2 w-full px-4 py-2 text-sm text-[#1a1a1a]`}
+                      >
+                        <Cog6ToothIcon className="w-4 h-4" />
+                        <span>Settings</span>
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={() => signOut()}
+                        className={`${
+                          active ? 'bg-[#f5f5f5]' : ''
+                        } flex items-center space-x-2 w-full px-4 py-2 text-sm text-[#1a1a1a]`}
+                      >
+                        <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                        <span>Sign out</span>
+                      </button>
+                    )}
+                  </Menu.Item>
+                </Menu.Items>
+              </Menu>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-[640px] mx-auto px-6 py-6">
+        {/* Links List */}
+        <div className="bg-white rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.1)] p-4 border border-[#e0e0e0]">
+          <h2 className="text-base font-semibold mb-3 text-[#1a1a1a] font-['Helvetica Neue']">Your Links</h2>
+          <div className="space-y-0">
+            {links.map((link) => (
+              <div key={link.id} className="relative pl-8 pb-6 border-l-2 border-[#e0e0e0] last:border-l-0 last:pb-0">
+                <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-[#007AFF] border-2 border-white"></div>
+                <div className="p-3 rounded-lg border border-[#e0e0e0] hover:bg-[#f5f5f5]">
+                  <div className="flex items-start space-x-3">
+                    <img
+                      src={`https://www.google.com/s2/favicons?domain=${new URL(link.url).hostname}`}
+                      alt=""
+                      className="w-4 h-4 mt-1"
+                    />
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold text-[#1a1a1a] font-['Helvetica Neue']">{link.title}</h3>
+                      <p className="text-[#666] font-['Helvetica Neue'] text-sm">{link.description}</p>
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#007AFF] hover:text-[#0055FF] font-['Helvetica Neue'] text-sm"
+                      >
+                        {link.url}
+                      </a>
+                      {link.note && (
+                        <p className="mt-1 text-[#666] font-['Helvetica Neue'] text-sm">Note: {link.note}</p>
+                      )}
+                      <div className="mt-2 flex items-center space-x-2">
+                        <div className="w-6 h-6 rounded-full bg-[#007AFF] flex items-center justify-center">
+                          <span className="text-white text-xs font-medium">{link.created_by[0].toUpperCase()}</span>
+                        </div>
+                        <p className="text-xs text-[#999] font-['Helvetica Neue']">
+                          Shared on {new Date(link.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+} 

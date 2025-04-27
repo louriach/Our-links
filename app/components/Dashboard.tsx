@@ -269,17 +269,17 @@ export default function Dashboard({ user }: DashboardProps) {
   return (
     <div className="min-h-screen bg-[#f0f0f0]">
       {/* Header */}
-      <header className="bg-white border-b border-[#e0e0e0] shadow-sm">
+      <header className="bg-white border-b border-[var(--border)] shadow-sm">
         <div className="max-w-[640px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-[#1a1a1a] font-['Helvetica Neue']">Our Links</h1>
+            <h1 className="text-xl font-bold text-[var(--text-primary)] font-['Helvetica Neue']">Our Links</h1>
             
             <div className="flex items-center space-x-2">
               <Popover className="relative">
-                <Popover.Button className="p-2 text-[#007AFF] hover:bg-[#f5f5f5] rounded-lg">
+                <Popover.Button className="p-2 text-[var(--primary)] hover:bg-[var(--hover)] rounded-[var(--radius-md)]">
                   <PlusIcon className="w-5 h-5" />
                 </Popover.Button>
-                <Popover.Panel className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-[#e0e0e0] p-4 z-10">
+                <Popover.Panel className="absolute right-0 mt-2 w-80 bg-white rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] border border-[var(--border)] p-4 z-10">
                   <form onSubmit={handleSubmit} className="space-y-3">
                     <div>
                       <input
@@ -287,7 +287,7 @@ export default function Dashboard({ user }: DashboardProps) {
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
                         placeholder="Enter URL to share"
-                        className="w-full px-4 py-2 rounded-lg border border-[#e0e0e0] focus:outline-none focus:border-[#007AFF] font-['Helvetica Neue'] text-[#1a1a1a] text-sm"
+                        className="w-full px-4 py-2 rounded-[var(--radius-md)] border border-[var(--border)] focus:outline-none focus:border-[var(--primary)] font-['Helvetica Neue'] text-[var(--text-primary)] text-sm"
                       />
                     </div>
                     <div>
@@ -295,19 +295,19 @@ export default function Dashboard({ user }: DashboardProps) {
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
                         placeholder="Add a note (optional)"
-                        className="w-full px-4 py-2 rounded-lg border border-[#e0e0e0] focus:outline-none focus:border-[#007AFF] font-['Helvetica Neue'] text-[#1a1a1a] text-sm"
+                        className="w-full px-4 py-2 rounded-[var(--radius-md)] border border-[var(--border)] focus:outline-none focus:border-[var(--primary)] font-['Helvetica Neue'] text-[var(--text-primary)] text-sm"
                         rows={2}
                       />
                     </div>
                     <div className="space-y-3">
-                      <div className="bg-[#f5f5f5] rounded-lg p-3">
+                      <div className="bg-[var(--hover)] rounded-[var(--radius-md)] p-3">
                         {friends.length === 0 ? (
                           <div className="text-center space-y-2">
-                            <p className="text-sm text-[#666]">You don't have any friends yet.</p>
+                            <p className="text-sm text-[var(--text-secondary)]">You don't have any friends yet.</p>
                             <button
                               type="button"
                               onClick={copyProfileUrl}
-                              className="text-[#007AFF] text-sm"
+                              className="text-[var(--primary)] text-sm"
                             >
                               Share your profile to connect with friends
                             </button>
@@ -319,17 +319,17 @@ export default function Dashboard({ user }: DashboardProps) {
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
                               placeholder="Search friends..."
-                              className="w-full px-3 py-1.5 rounded-lg border border-[#e0e0e0] bg-white text-sm"
+                              className="w-full px-3 py-1.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-white text-sm"
                             />
                             <div className="space-y-2 max-h-48 overflow-y-auto">
                               {searchQuery ? (
                                 filteredFriends.map(friend => (
                                   <div
                                     key={friend.id}
-                                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-white cursor-pointer"
+                                    className="flex items-center space-x-2 p-2 rounded-[var(--radius-md)] hover:bg-white cursor-pointer"
                                     onClick={() => toggleFriend(friend.id)}
                                   >
-                                    <div className="w-6 h-6 rounded-full bg-[#007AFF] flex items-center justify-center">
+                                    <div className="w-6 h-6 rounded-full bg-[var(--primary)] flex items-center justify-center">
                                       {friend.avatar_url ? (
                                         <img src={friend.avatar_url} alt={friend.full_name || friend.email} className="w-full h-full rounded-full" />
                                       ) : (
@@ -338,7 +338,7 @@ export default function Dashboard({ user }: DashboardProps) {
                                     </div>
                                     <span className="text-sm">{friend.full_name || friend.email}</span>
                                     {selectedFriends.includes(friend.id) && (
-                                      <CheckIcon className="w-4 h-4 text-[#007AFF]" />
+                                      <CheckIcon className="w-4 h-4 text-[var(--primary)]" />
                                     )}
                                   </div>
                                 ))
@@ -346,10 +346,10 @@ export default function Dashboard({ user }: DashboardProps) {
                                 recentFriends.map(friend => (
                                   <div
                                     key={friend.id}
-                                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-white cursor-pointer"
+                                    className="flex items-center space-x-2 p-2 rounded-[var(--radius-md)] hover:bg-white cursor-pointer"
                                     onClick={() => toggleFriend(friend.id)}
                                   >
-                                    <div className="w-6 h-6 rounded-full bg-[#007AFF] flex items-center justify-center">
+                                    <div className="w-6 h-6 rounded-full bg-[var(--primary)] flex items-center justify-center">
                                       {friend.avatar_url ? (
                                         <img src={friend.avatar_url} alt={friend.full_name || friend.email} className="w-full h-full rounded-full" />
                                       ) : (
@@ -358,7 +358,7 @@ export default function Dashboard({ user }: DashboardProps) {
                                     </div>
                                     <span className="text-sm">{friend.full_name || friend.email}</span>
                                     {selectedFriends.includes(friend.id) && (
-                                      <CheckIcon className="w-4 h-4 text-[#007AFF]" />
+                                      <CheckIcon className="w-4 h-4 text-[var(--primary)]" />
                                     )}
                                   </div>
                                 ))
@@ -368,7 +368,7 @@ export default function Dashboard({ user }: DashboardProps) {
                         )}
                       </div>
                       {error && (
-                        <div className="flex items-center space-x-2 p-2 bg-red-50 rounded-lg">
+                        <div className="flex items-center space-x-2 p-2 bg-red-50 rounded-[var(--radius-md)]">
                           <ExclamationCircleIcon className="w-4 h-4 text-red-500" />
                           <span className="text-sm text-red-700">{error}</span>
                         </div>
@@ -377,7 +377,7 @@ export default function Dashboard({ user }: DashboardProps) {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full px-4 py-1.5 bg-[#007AFF] text-white rounded-lg hover:bg-[#0055FF] disabled:opacity-50 font-['Helvetica Neue'] text-sm"
+                      className="w-full px-4 py-1.5 bg-[var(--primary)] text-white rounded-[var(--radius-md)] hover:bg-[var(--primary-hover)] disabled:opacity-50 font-['Helvetica Neue'] text-sm"
                     >
                       {loading ? 'Sharing...' : 'Share Link'}
                     </button>
@@ -386,22 +386,22 @@ export default function Dashboard({ user }: DashboardProps) {
               </Popover>
 
               <Popover className="relative">
-                <Popover.Button className="p-2 text-[#007AFF] hover:bg-[#f5f5f5] rounded-lg">
+                <Popover.Button className="p-2 text-[var(--primary)] hover:bg-[var(--hover)] rounded-[var(--radius-md)]">
                   <ShareIcon className="w-5 h-5" />
                 </Popover.Button>
-                <Popover.Panel className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-[#e0e0e0] p-4 z-10">
+                <Popover.Panel className="absolute right-0 mt-2 w-80 bg-white rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] border border-[var(--border)] p-4 z-10">
                   <div className="space-y-3">
-                    <h3 className="text-sm font-medium text-[#1a1a1a]">Share your profile</h3>
+                    <h3 className="text-sm font-medium text-[var(--text-primary)]">Share your profile</h3>
                     <div className="flex items-center space-x-2">
                       <input
                         type="text"
                         value={`${window.location.origin}/p/${profile?.profile_url}`}
                         readOnly
-                        className="flex-1 px-3 py-1.5 rounded-lg border border-[#e0e0e0] bg-[#f5f5f5] text-[#666] font-['Helvetica Neue'] text-sm"
+                        className="flex-1 px-3 py-1.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--hover)] text-[var(--text-secondary)] font-['Helvetica Neue'] text-sm"
                       />
                       <button
                         onClick={copyProfileUrl}
-                        className="px-3 py-1.5 bg-[#007AFF] text-white rounded-lg hover:bg-[#0055FF] font-['Helvetica Neue'] text-sm"
+                        className="px-3 py-1.5 bg-[var(--primary)] text-white rounded-[var(--radius-md)] hover:bg-[var(--primary-hover)] font-['Helvetica Neue'] text-sm"
                       >
                         Copy
                       </button>
@@ -411,17 +411,17 @@ export default function Dashboard({ user }: DashboardProps) {
               </Popover>
 
               <Menu as="div" className="relative">
-                <Menu.Button className="w-8 h-8 rounded-full bg-[#007AFF] flex items-center justify-center">
+                <Menu.Button className="w-8 h-8 rounded-full bg-[var(--primary)] flex items-center justify-center">
                   <span className="text-white font-medium">{user?.email?.[0]?.toUpperCase() || '?'}</span>
                 </Menu.Button>
-                <Menu.Items className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-[#e0e0e0] py-1 z-10">
+                <Menu.Items className="absolute right-0 mt-2 w-48 bg-white rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] border border-[var(--border)] py-1 z-10">
                   <Menu.Item>
                     {({ active }) => (
                       <button
                         onClick={handleProfileClick}
                         className={`${
-                          active ? 'bg-[#f5f5f5]' : ''
-                        } flex items-center space-x-2 w-full px-4 py-2 text-sm text-[#1a1a1a]`}
+                          active ? 'bg-[var(--hover)]' : ''
+                        } flex items-center space-x-2 w-full px-4 py-2 text-sm text-[var(--text-primary)]`}
                       >
                         <UserCircleIcon className="w-4 h-4" />
                         <span>Profile</span>
@@ -433,8 +433,8 @@ export default function Dashboard({ user }: DashboardProps) {
                       <button
                         onClick={handleSettingsClick}
                         className={`${
-                          active ? 'bg-[#f5f5f5]' : ''
-                        } flex items-center space-x-2 w-full px-4 py-2 text-sm text-[#1a1a1a]`}
+                          active ? 'bg-[var(--hover)]' : ''
+                        } flex items-center space-x-2 w-full px-4 py-2 text-sm text-[var(--text-primary)]`}
                       >
                         <Cog6ToothIcon className="w-4 h-4" />
                         <span>Settings</span>
@@ -446,8 +446,8 @@ export default function Dashboard({ user }: DashboardProps) {
                       <button
                         onClick={() => signOut()}
                         className={`${
-                          active ? 'bg-[#f5f5f5]' : ''
-                        } flex items-center space-x-2 w-full px-4 py-2 text-sm text-[#1a1a1a]`}
+                          active ? 'bg-[var(--hover)]' : ''
+                        } flex items-center space-x-2 w-full px-4 py-2 text-sm text-[var(--text-primary)]`}
                       >
                         <ArrowRightOnRectangleIcon className="w-4 h-4" />
                         <span>Sign out</span>
@@ -464,13 +464,13 @@ export default function Dashboard({ user }: DashboardProps) {
       {/* Main Content */}
       <main className="max-w-[640px] mx-auto px-6 py-6">
         {/* Links List */}
-        <div className="bg-white rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.1)] p-4 border border-[#e0e0e0]">
-          <h2 className="text-base font-semibold mb-3 text-[#1a1a1a] font-['Helvetica Neue']">Your Links</h2>
+        <div className="bg-white rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] p-4 border border-[var(--border)]">
+          <h2 className="text-base font-semibold mb-3 text-[var(--text-primary)] font-['Helvetica Neue']">Your Links</h2>
           <div className="space-y-0">
             {links.map((link) => (
-              <div key={link.id} className="relative pl-8 pb-6 border-l-2 border-[#e0e0e0] last:border-l-0 last:pb-0">
-                <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-[#007AFF] border-2 border-white"></div>
-                <div className="p-3 rounded-lg border border-[#e0e0e0] hover:bg-[#f5f5f5]">
+              <div key={link.id} className="relative pl-8 pb-6 border-l-2 border-[var(--border)] last:border-l-0 last:pb-0">
+                <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-[var(--primary)] border-2 border-white"></div>
+                <div className="p-3 rounded-[var(--radius-md)] border border-[var(--border)] hover:bg-[var(--hover)]">
                   <div className="flex items-start space-x-3">
                     <img
                       src={`https://www.google.com/s2/favicons?domain=${new URL(link.url).hostname}`}
@@ -478,30 +478,30 @@ export default function Dashboard({ user }: DashboardProps) {
                       className="w-4 h-4 mt-1"
                     />
                     <div className="flex-1">
-                      <h3 className="text-base font-semibold text-[#1a1a1a] font-['Helvetica Neue']">{link.title}</h3>
-                      <p className="text-[#666] font-['Helvetica Neue'] text-sm">{link.description}</p>
+                      <h3 className="text-base font-semibold text-[var(--text-primary)] font-['Helvetica Neue']">{link.title}</h3>
+                      <p className="text-[var(--text-secondary)] font-['Helvetica Neue'] text-sm">{link.description}</p>
                       <a
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[#007AFF] hover:text-[#0055FF] font-['Helvetica Neue'] text-sm"
+                        className="text-[var(--primary)] hover:text-[var(--primary-hover)] font-['Helvetica Neue'] text-sm"
                       >
                         {link.url}
                       </a>
                       {link.note && (
-                        <p className="mt-1 text-[#666] font-['Helvetica Neue'] text-sm">Note: {link.note}</p>
+                        <p className="mt-1 text-[var(--text-secondary)] font-['Helvetica Neue'] text-sm">Note: {link.note}</p>
                       )}
                       <div className="mt-2 flex items-center space-x-2">
                         {link.created_by === user.id ? (
-                          <div className="w-6 h-6 rounded-full bg-[#007AFF] flex items-center justify-center">
-                            <span className="text-white text-xs font-medium">{user.email[0].toUpperCase()}</span>
+                          <div className="w-6 h-6 rounded-full bg-[var(--primary)] flex items-center justify-center">
+                            <span className="text-white text-xs font-medium">{user.email?.[0]?.toUpperCase() || '?'}</span>
                           </div>
                         ) : (
-                          <div className="w-6 h-6 rounded-full bg-[#999] flex items-center justify-center">
+                          <div className="w-6 h-6 rounded-full bg-[var(--secondary)] flex items-center justify-center">
                             <span className="text-white text-xs font-medium">{link.created_by[0].toUpperCase()}</span>
                           </div>
                         )}
-                        <p className="text-xs text-[#999] font-['Helvetica Neue']">
+                        <p className="text-xs text-[var(--text-tertiary)] font-['Helvetica Neue']">
                           Shared on {new Date(link.created_at).toLocaleDateString()}
                         </p>
                       </div>

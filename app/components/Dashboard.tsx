@@ -272,7 +272,7 @@ export default function Dashboard({ user }: DashboardProps) {
       <header className="bg-white border-b border-[var(--border)] shadow-sm">
         <div className="max-w-[640px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-[var(--text-primary)] font-['Helvetica Neue']">Our Links</h1>
+            <h1 className="text-xl font-bold text-[var(--text-primary)] font-['Helvetica Neue']">Our Links - Share with Friends</h1>
             
             <div className="flex items-center space-x-2">
               <Popover className="relative">
